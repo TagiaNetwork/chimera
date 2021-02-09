@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 #include <winsock2.h>
+#include <unistd.h>
 #include <ws2tcpip.h>
 #include "bookmark.hpp"
 #include "../chimera.hpp"
@@ -469,10 +470,16 @@ namespace Chimera {
         return success;
     }
 
-    static void join_bookmark(const Bookmark &bookmark) {
+    static void connect_bookmark(const Bookmark &bookmark) {
         char connect_command[256];
         std::snprintf(connect_command, sizeof(connect_command), "connect %s%s%s:%u \"%s\"", bookmark.brackets ? "[" : "", bookmark.address, bookmark.brackets ? "]" : "", bookmark.port, bookmark.password);
+        usleep(500000);
         execute_script(connect_command);
+    }
+
+    static void join_bookmark(const Bookmark &bookmark) {
+        execute_script("disconnect");
+        std::thread(connect_bookmark, bookmark).detach();
     }
 
     bool bookmark_connect_command(int, const char **argv) {
